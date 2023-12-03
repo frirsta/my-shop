@@ -1,42 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Products from "./components/products/Products";
-import commerce from "./lib/commerce";
+import React from "react";
+import {
+  Link,
+  Outlet,
+  Route,
+  RouterProvider,
+  createBrowserRouter,
+  createRoutesFromElements,
+} from "react-router-dom";
+import { ProductsList, productsLoader } from "./components/products/Products";
+import Home from "./pages/Home";
+import { Product, productDetailsLoader } from "./components/Product";
 function App() {
-  const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
-
-  const fetchProducts = async () => {
-    const { data } = await commerce.products.list();
-    setProducts(data);
-  };
-
-  const handleAddToCart = async (productId, quantity, variant) => {
-    const item = await commerce.cart.add(productId, quantity, variant);
-    setCart(item.cart);
-  };
-
-  const handleUpdateCartQty = async (productId, quantity) => {
-    const response = await commerce.cart.update(productId, { quantity });
-    setCart(response.cart);
-  };
-  const handleRemoveFromCart = async (productId) => {
-    const response = await commerce.cart.remove(productId);
-    setCart(response.cart);
-  };
-  const handleEmptyCart = async () => {
-    const response = await commerce.cart.empty();
-    setCart(response.cart);
-  };
-  useEffect(() => {
-    fetchProducts();
-    console.log(products);
-  }, []);
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={<Root />}>
+        <Route index element={<Home />} />
+        <Route
+          path="/products"
+          loader={productsLoader}
+          element={<ProductsList />}
+        />
+        <Route
+          loader={productDetailsLoader}
+          path="/:productId"
+          element={<Product />}
+        />
+      </Route>
+    )
+  );
   return (
     <div>
-  App
+      <RouterProvider router={router} />
     </div>
   );
 }
 
 export default App;
+
+const Root = () => {
+  return (
+    <>
+      <div>
+        <Link to="/">Home</Link>
+        <Link to="/products">Products</Link>
+      </div>
+      <div>
+        <Outlet />
+      </div>
+    </>
+  );
+};
